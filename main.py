@@ -1,6 +1,7 @@
 #Dependencies
 import discord
 from discord.ext import commands
+from discord import FFmpegPCMAudio
 import requests
 import json
 
@@ -37,15 +38,52 @@ async def covid(ctx):
 async def join(ctx):
     if(ctx.author.voice):
         channel = ctx.author.voice.channel
-        await channel.connect()
+        voice = await channel.connect()
+        source = FFmpegPCMAudio('song.mp3')
+        player = voice.play(source)
     else:
         await ctx.channel.send("You must be a voice channel to do this command.")
+
 @client.command()
 async def leave(ctx):
     if(ctx.voice_client):
         await ctx.guild.voice_client.disconnect()
     else:
         await ctx.channel.send("I must be in a voice channel for this command to work.")
+
+@client.command()
+async def pause(ctx):
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if voice.is_playing():
+        voice.pause()
+    else:
+        await ctx.channel.send("Nothing is playing, to pause.")
+
+@client.command()
+async def resume(ctx):
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if voice.is_paused():
+        voice.resume()
+    else:
+        await ctx.channel.send("Nothing is paused.")
+
+@client.command()
+async def stop(ctx):
+    voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+    if voice.is_playing() or voice.is_paused():
+        voice.stop()
+    else:
+        await ctx.channel.send("Nothing is playing")
+
+@client.command()
+async def play(ctx, arg):
+    voice = ctx.guild.voice_client
+    source = FFmpegPCMAudio(arg + '.mp3')
+    player = voice.play(source)
+
+
+
+
 
 
 

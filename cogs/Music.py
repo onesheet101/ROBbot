@@ -1,76 +1,86 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 from discord import FFmpegPCMAudio
+from discord.app_commands import Choice
+
 
 class Music(commands.Cog):
 
-    def __init__(self,client):
+    def __init__(self, client):
         self.client = client
 
     queues = {}
 
-    @commands.command()
-    async def join(self, ctx):
-        if (ctx.author.voice):
-            channel = ctx.author.voice.channel
+    @app_commands.command(name="join", description="Makes the ROBbot join the VC you are in.")
+    async def join(self, interaction: discord.Interaction):
+        if interaction.user.voice:
+            channel = interaction.user.voice.channel
             voice = await channel.connect()
         else:
-            await ctx.send("You must be a voice channel to do this command.")
+            await interaction.response.send_message("You must be a voice channel to do this command.")
 
-    @commands.command()
-    async def leave(self, ctx):
-        if (ctx.voice_client):
-            await ctx.guild.voice_client.disconnect()
+    @app_commands.command(name="leave", description="Makes the ROBbot leave any VC.")
+    async def leave(self, interaction: discord.Interaction):
+        if interaction.guild.voice_client:
+            await interaction.guild.voice_client.disconnect()
         else:
-            await ctx.send("I must be in a voice channel for this command to work.")
+            await interaction.response.send_message("I must be in a voice channel for this command to work.")
 
-    @commands.command()
-    async def pause(self, ctx):
-        voice = discord.utils.get(self.client.voice_clients, guild=ctx.guild)
+    @app_commands.command(name="pause", description="Pauses what the ROBbot is playing")
+    async def pause(self, interaction: discord.Interaction):
+        voice = discord.utils.get(self.client.voice_clients, guild=interaction.guild)
         if voice.is_playing():
             voice.pause()
         else:
-            await ctx.send("Nothing is playing, to pause.")
+            await interaction.response.send_message("Nothing is playing, to pause.")
 
-    @commands.command()
-    async def resume(self, ctx):
-        voice = discord.utils.get(self.client.voice_clients, guild=ctx.guild)
+    @app_commands.command(name="resume", description="ROBot will carry on playing what was paused.")
+    async def resume(self, interaction: discord.Interaction):
+        voice = discord.utils.get(self.client.voice_clients, guild=interaction.guild)
         if voice.is_paused():
             voice.resume()
         else:
-            await ctx.send("Nothing is paused.")
+            await interaction.response.send("Nothing is paused.")
 
-    @commands.command()
-    async def stop(self, ctx):
-        voice = discord.utils.get(self.client.voice_clients, guild=ctx.guild)
+    @app_commands.command(name="stop", description="ROBot will clear the song it is currently playing.")
+    async def stop(self, interaction: discord.Interaction):
+        voice = discord.utils.get(self.client.voice_clients, guild=interaction.guild)
         if voice.is_playing() or voice.is_paused():
             voice.stop()
         else:
-            await ctx.send("Nothing is playing")
+            await interaction.response.send_message("Nothing is playing")
 
-    @commands.command()
-    async def play(self, ctx, arg):
-        voice = ctx.guild.voice_client
+    @app_commands.command(name="play", description="ROBbot will play a song.")
+    @app_commands.describe(arg="Song to Play")
+    @app_commands.choices(arg = [
+        Choice(name="Cheef Keef", value="keef"),
+        Choice(name="Couple Guinness", value="song"),
+        Choice(name="Kid", value="kid"),
+    ])
+    async def play(self, interaction: discord.Interaction, arg: Choice[str]):
+        voice = interaction.guild.voice_client
+        song = arg.value + '.mp3'
+        source = FFmpegPCMAudio("./Audio/" + song)
+        player = voice.play(source, after=lambda x=None: self.check_queue(interaction, interaction.guild.id))
+        embed = discord.Embed(title="Now Playing", description=arg.name, colour=0x9e4df0)
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(name="queue", description="ROBbot will queue a song.")
+    @app_commands.describe(arg="Song to Play")
+    async def queue(self, interaction: discord.Interaction, arg: str):
+        voice = interaction.guild.voice_client
         song = arg + '.mp3'
-        source = FFmpegPCMAudio(song)
-        player = voice.play(source, after=lambda x=None: self.check_queue(ctx, ctx.guild.id))
-        embed = discord.Embed(title="Now Playing", description=arg, colour=0x9e4df0)
-        await ctx.send(embed=embed)
+        source = FFmpegPCMAudio("./Audio/" + song)
 
-    @commands.command()
-    async def queue(self, ctx, arg):
-        voice = ctx.guild.voice_client
-        song = arg + '.mp3'
-        source = FFmpegPCMAudio(song)
-
-        guild_id = ctx.guild.id
+        guild_id = interaction.guild.id
 
         if guild_id in self.queues:
             self.queues[guild_id].append(source)
         else:
             self.queues[guild_id] = [source]
 
-        await ctx.send("Added to queue")
+        await interaction.response.send_message("Added to queue")
 
     def check_queue(self, ctx, id):
         if self.queues[id]:
@@ -78,6 +88,6 @@ class Music(commands.Cog):
             source = self.queues[id].pop(0)
             player = voice.play(source, after=lambda x=None: self.check_queue(ctx, ctx.guild.id))
 
+
 async def setup(client):
     await client.add_cog(Music(client))
-

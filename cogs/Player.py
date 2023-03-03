@@ -5,7 +5,8 @@ from discord import FFmpegPCMAudio
 from discord.app_commands import Choice
 
 
-class Music(commands.Cog):
+
+class Player(commands.Cog):
 
     def __init__(self, client):
         self.client = client
@@ -62,6 +63,7 @@ class Music(commands.Cog):
         voice = interaction.guild.voice_client
         song = arg.value + '.mp3'
         source = FFmpegPCMAudio("./Audio/" + song)
+        url2 = info['formats'][0]['url']
         player = voice.play(source, after=lambda x=None: self.check_queue(interaction, interaction.guild.id))
         embed = discord.Embed(title="Now Playing", description=arg.name, colour=0x9e4df0)
         await interaction.response.send_message(embed=embed)
@@ -90,4 +92,4 @@ class Music(commands.Cog):
 
 
 async def setup(client):
-    await client.add_cog(Music(client))
+    await client.add_cog(Player(client))

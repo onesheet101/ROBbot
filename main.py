@@ -1,10 +1,8 @@
 import discord
 from discord.ext import commands
-from discord import app_commands
 import os
 from apikeys import *
-from discord import Interaction
-import asyncio
+
 
 intents = discord.Intents.all()
 client = commands.Bot(command_prefix='//', intents=intents)
@@ -27,14 +25,12 @@ async def on_ready():
             await client.load_extension(extension)
         print(f'{initial_extensions} are loaded')
 
+
 @client.command()
 async def sync(ctx):
     synced = await ctx.bot.tree.sync()
     print(f'synced {len(synced)} commands')
     print(synced)
-
-
-
 
 
 client.run(BOTTOKEN)

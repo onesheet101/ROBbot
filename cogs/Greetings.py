@@ -31,11 +31,11 @@ class Greetings(commands.Cog):
 
     @app_commands.command(name="embed", description="Sends a test embedded messaged")
     async def embed(self, interaction: discord.Interaction):
-        embed = discord.Embed(title="test", url="https://github.com/onesheet101/ROBbot", description="my github pog",
+        embed = discord.Embed(title="ROBbot Github", url="https://github.com/onesheet101/ROBbot", description="my github pog",
                               colour=0x9e4df0)
         embed.set_author(name="Robert S", url="https://github.com/onesheet101",
                          icon_url="https://avatars.githubusercontent.com/u/126177072?v=4")
-        embed.set_thumbnail(url="https://avatars.githubusercontent.com/u/126177072?v=4")
+        embed.set_thumbnail(url="https://pbs.twimg.com/media/ErX62HpXUAcaHjw.jpg:large")
         await interaction.response.send_message(embed=embed)
 
 

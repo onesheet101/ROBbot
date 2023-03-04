@@ -6,10 +6,9 @@ class Timer:
     def __init__(self, coginstance, member):
         self.coginstance = coginstance
         self.member = member
-        self.test = True
         self.timer.start()
 
-    @tasks.loop(minutes=5, count=2)
+    @tasks.loop(minutes=5, count=1)
     async def timer(self):
         pass
 

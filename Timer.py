@@ -4,8 +4,8 @@ from discord.ext import tasks
 class Timer:
 
     def __init__(self, coginstance, member):
-        self.coginstance = coginstance
         self.member = member
+        self.coginstance = coginstance
         self.timer.start()
 
     @tasks.loop(minutes=5, count=1)

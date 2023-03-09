@@ -14,6 +14,7 @@ class Quiz(commands.Cog):
 
     timers = {}
     ranout = {}
+    answered = {}
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
@@ -66,6 +67,7 @@ class Quiz(commands.Cog):
 
     async def did_answer(self, payload, answer, member):
         self.timers.pop(member.id)
+        self.answered[member.id] = "yes"
         if payload.emoji.name == answer:
             await member.send("Correct")
         else:
@@ -77,8 +79,9 @@ class Quiz(commands.Cog):
         self.timers[member.id] = new_timer
 
     async def end_of_timer(self, member):
-        await member.timeout(timedelta(minutes=5), reason="You did not answer in time.")
-        print(f'{member} did not answer and was time out for 5 minutes.')
+        if self.answered.pop(member.id, None) is None:
+            await member.timeout(timedelta(minutes=5), reason="You did not answer in time.")
+            print(f'{member} did not answer and was time out for 5 minutes.')
         self.timers.pop(member.id)
         self.ranout[member.id] = "yes"
 

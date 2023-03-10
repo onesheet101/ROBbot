@@ -16,14 +16,14 @@ class Quiz(commands.Cog):
     answered = {}
 
     # Whenever a user goes from having no voice_state to having one
-    # has a 1/100 chance of initiating a quiz for them.
+    # has a 1/25 chance of initiating a quiz for them.
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         if member == self.client.user:
             return
         if before.channel is None and after.channel:
-            randomnumber = random.randint(0, 100)
-            if randomnumber == 100:
+            randomnumber = random.randint(1, 25)
+            if randomnumber == 25:
                 await self.begin_quiz(member)
 
     # Manual way of forcing a quiz question.

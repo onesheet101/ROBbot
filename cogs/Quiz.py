@@ -43,7 +43,7 @@ class Quiz(commands.Cog):
     # The timer for the question is also created here before calling "take_answer".
     async def begin_quiz(self, member):
         # Retrieves a random question from an array in "questions.py"
-        randomnumber = random.randint(0, len(questions))
+        randomnumber = random.randint(0, len(questions) - 1)
         question = questions[randomnumber][0]
         questionanswers = questions[randomnumber][1:-1]
         answer = questions[randomnumber][4]
@@ -80,10 +80,13 @@ class Quiz(commands.Cog):
     async def did_answer(self, payload, answer, member):
         self.timers.pop(member.id)
         self.answered[member.id] = "yes"
+        statsCog = self.client.get_cog("Stats")
         if payload.emoji.name == answer:
-            await member.send("Correct")
+            await member.send("Correct, 50 credit score awarded!")
+            statsCog.add_score(member.id, 50)
         else:
-            await member.timeout(timedelta(minutes=5), reason="You got it wrong boy")
+            statsCog.remove_score(member.id, 100)
+            await member.timeout(timedelta(minutes=5), reason="You got it wrong boy, 100 credit score deducted!")
             print(f'{member} got the answer incorrect and was timed out for 5 minutes.')
 
     # Simply instantiates the new timer object for the user and adds to dictionary.
@@ -96,7 +99,9 @@ class Quiz(commands.Cog):
     # The timer dictionary is then cleared.
     async def end_of_timer(self, member):
         if self.answered.pop(member.id, None) is None:
-            await member.timeout(timedelta(minutes=5), reason="You did not answer in time.")
+            statsCog = self.client.get_cog("Stats")
+            statsCog.remove_score(member.id, 100)
+            await member.timeout(timedelta(minutes=5), reason="You did not answer in time, 100 credit score deducted!")
             print(f'{member} did not answer and was time out for 5 minutes.')
         self.timers.pop(member.id)
 

@@ -4,6 +4,7 @@ from discord import app_commands
 import mysql.connector
 import mysql
 import discord
+import datetime
 
 
 class Stats(commands.Cog):
@@ -17,8 +18,9 @@ class Stats(commands.Cog):
     async def on_member_join(self, member):
         membername = str(member)
         mid = member.id
+        now = datetime.datetime.now().date()
         try:
-            self.mycursor.execute("INSERT INTO member (name, score, memberID) VALUES (%s,%s,%s)", (membername, 1000, mid))
+            self.mycursor.execute("INSERT INTO member (name, score, last_joined, memberID) VALUES (%s,%s,%s,%s)", (membername, 1000, now, mid))
             self.db.commit()
         except:
             print(f'{membername} already has a record.')
@@ -78,6 +80,30 @@ class Stats(commands.Cog):
     def reset_score(self,memberid):
         self.mycursor.execute("UPDATE member SET score = %s WHERE memberID = %s", (1000, memberid))
         self.db.commit()
+
+    def get_date(self, memberid):
+        self.mycursor.execute("SELECT last_joined FROM member WHERE memberID = %s", (memberid,))
+        for record in self.mycursor:
+            return record[0]
+
+    def set_date(self, date, memberid):
+        self.mycursor.execute("UPDATE member SET last_joined = %s WHERE memberID = %s", (date, memberid))
+        self.db.commit()
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        if member == self.client.user:
+            return
+        if before.channel is None and after.channel:
+            previous_date = self.get_date(member.id)
+            now = datetime.datetime.now().date()
+            difference = (now - previous_date).days
+            if difference > 1:
+                self.remove_score(member.id, difference)
+                await member.send(f'You have not joined the server in {difference} days. You have been deducted {difference} credit score!.')
+            self.set_date(now, member.id)
+
+
 
 
 async def setup(client):
